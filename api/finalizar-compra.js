@@ -11,33 +11,41 @@ module.exports = async (req, res) => {
     try {
         const { nome, telefone, valor, numeros } = req.body;
 
+        // --- CÁLCULO DE EXPIRAÇÃO (10 MINUTOS) ---
+        const agora = new Date();
+        const dezMinutosDepois = new Date(agora.getTime() + 10 * 60000);
+        const dataVencimento = dezMinutosDepois.toISOString().split('T')[0]; 
+        // -----------------------------------------
+
         // 1. GERA O PIX NO ASAAS
         const asaasResponse = await axios.post('https://www.asaas.com/api/v3/payments', {
-            customer: 'cus_000169684027', // Seu ID de cliente que funcionou
+            customer: 'cus_000169684027', 
             billingType: 'PIX',
             value: valor,
-            dueDate: '2026-12-31', // Data limite para pagar
+            dueDate: dataVencimento, // Data de hoje formatada
             description: `Rifa Digital - ${nome}`,
-            externalReference: telefone
+            externalReference: telefone,
+            // Define que o QR Code deixará de funcionar em 10 minutos
+            expiryCustomExpirationDate: dezMinutosDepois.toISOString() 
         }, {
-            headers: { 'access_token': process.env.ASAAS_API_KEY } // Pega a chave segura da Vercel
+            headers: { 'access_token': process.env.ASAAS_API_KEY } 
         });
 
         const paymentData = asaasResponse.data;
 
-        // 2. SALVA NO SEU FIREBASE (rifadigital-1da5b)
-        // Isso tira o seu banco do estado "null"
+        // 2. SALVA NO SEU FIREBASE
         await axios.put(`https://rifadigital-1da5b-default-rtdb.firebaseio.com/vendas/${paymentData.id}.json`, {
             nome,
             telefone,
             numeros,
             valor,
             status: 'PENDENTE',
+            pix_id: paymentData.id,
             pix_url: paymentData.invoiceUrl,
-            data: new Date().toISOString()
+            expira_em: dezMinutosDepois.toISOString(),
+            data: agora.toISOString()
         });
 
-        // Retorna o link para o seu index.html abrir
         return res.status(200).json({ url: paymentData.invoiceUrl });
 
     } catch (error) {
