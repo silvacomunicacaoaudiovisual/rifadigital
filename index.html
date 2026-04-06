@@ -75,7 +75,8 @@
                 <p style="color: #f1c40f; font-size: 14px;">O pagamento é via PIX!</p>
                 <input type="text" id="nome" placeholder="Seu Nome Completo">
                 <input type="tel" id="tel" placeholder="Seu WhatsApp">
-                <button class="btn-confirmar" onclick="salvarReserva()">COMPRAR</button>
+                <input type="text" id="cpfCnpj" placeholder="CPF (Apenas números)">
+                <button class="btn-confirmar" id="btnFinal" onclick="salvarReserva()">COMPRAR E PAGAR</button>
             </div>
             
             <div id="adminSection" style="display:none;">
@@ -111,29 +112,12 @@
         const db = firebase.database();
         let selecionados = [];
 
-        // Gerar Grade
         for (let i = 1; i <= 200; i++) {
             const btn = document.createElement('button');
             btn.id = `n${i}`; btn.innerText = i; btn.className = 'num-btn';
             btn.onclick = () => clicarNumero(i);
             document.getElementById('grid').appendChild(btn);
         }
-
-        // Limpeza de expirados
-        setInterval(() => {
-            const agora = Date.now();
-            db.ref('rifa').once('value', (snap) => {
-                const dados = snap.val() || {};
-                const updates = {};
-                let mudou = false;
-                Object.keys(dados).forEach(num => {
-                    if (dados[num].status === 'reservado' && (agora - dados[num].horario) > 600000) {
-                        updates[num] = null; mudou = true;
-                    }
-                });
-                if (mudou) db.ref('rifa').update(updates);
-            });
-        }, 60000);
 
         function clicarNumero(num) {
             const btn = document.getElementById(`n${num}`);
@@ -171,6 +155,65 @@
             }
         }
 
+        async function salvarReserva() {
+            const nome = document.getElementById('nome').value;
+            const tel = document.getElementById('tel').value;
+            const cpfCnpj = document.getElementById('cpfCnpj').value;
+            const btnFinal = document.getElementById('btnFinal');
+
+            if (!nome || !tel || !cpfCnpj) return alert("Preencha todos os campos!");
+
+            btnFinal.disabled = true;
+            btnFinal.innerText = "GERANDO PIX...";
+
+            const valorTotal = selecionados.length * 5;
+            const numTexto = selecionados.sort((a,b) => a - b).join(', ');
+            const token = '$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjNkZDEzODllLWUxMGItNGNkZi05ZTM3LTdmNmJhNjVhYWZiNTo6JGFhY2hfMDI4YmY4YjUtZmUwNC00OTI1LTgyMjUtOWQxN2FkNGY3OWEw';
+
+            try {
+                // 1. Criar Cliente no Asaas
+                const resCliente = await fetch('https://www.asaas.com/api/v3/customers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'access_token': token },
+                    body: JSON.stringify({ name: nome, cpfCnpj: cpfCnpj, mobilePhone: tel })
+                });
+                const dadosCliente = await resCliente.json();
+                
+                if (dadosCliente.errors) throw new Error(dadosCliente.errors[0].description);
+
+                // 2. Criar Cobrança
+                const resCobranca = await fetch('https://www.asaas.com/api/v3/payments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'access_token': token },
+                    body: JSON.stringify({
+                        customer: dadosCliente.id,
+                        billingType: 'PIX',
+                        value: valorTotal,
+                        dueDate: new Date().toISOString().split('T')[0],
+                        description: `Rifa - Números: ${numTexto}`
+                    })
+                });
+                const dadosCobranca = await resCobranca.json();
+
+                if (dadosCobranca.invoiceUrl) {
+                    // 3. Salvar no Firebase
+                    const updates = {};
+                    const agora = Date.now();
+                    selecionados.forEach(n => updates[n] = { nome, tel, status: 'reservado', horario: agora, payId: dadosCobranca.id });
+                    
+                    await db.ref('rifa').update(updates);
+
+                    // 4. Redirecionar para o Pagamento
+                    window.location.href = dadosCobranca.invoiceUrl;
+                }
+
+            } catch (err) {
+                alert("Erro: " + err.message);
+                btnFinal.disabled = false;
+                btnFinal.innerText = "COMPRAR";
+            }
+        }
+
         function carregarAdmin() {
             db.ref('rifa').on('value', (snap) => {
                 const dados = snap.val() || {};
@@ -184,44 +227,6 @@
                         <button class="btn-adm-acao" style="background:#555" onclick="if(confirm('Excluir?'))db.ref('rifa/${num}').remove()">🗑</button></td>`;
                     corpo.appendChild(tr);
                 });
-            });
-        }
-
-        function salvarReserva() {
-            const nome = document.getElementById('nome').value;
-            const tel = document.getElementById('tel').value;
-            if (!nome || !tel) return alert("Preencha tudo!");
-
-            // CORREÇÃO AQUI: Salva os números em texto ANTES de processar
-            const numTexto = selecionados.sort((a,b) => a - b).join(', ');
-            const valorTotal = selecionados.length * 5;
-            const agora = Date.now();
-            const updates = {};
-            
-            selecionados.forEach(n => updates[n] = { nome, tel, status: 'reservado', horario: agora });
-
-            db.ref('rifa').update(updates).then(() => {
-                document.getElementById('userSection').innerHTML = `
-                    <h3 style="color:#28a745;">PAGUE ANTES DO TEMPO!</h3>
-                    <div class="countdown" id="timer">10:00</div>
-                    <div style="background:#000; padding:15px; border-radius:10px; margin:10px 0;">
-                        <span style="color:#fffb00; font-size:22px; font-weight:bold;">R$ ${valorTotal},00</span>
-                    </div>
-                    <div style="background:#222; padding:10px; border-radius:8px; margin-bottom:15px; word-break:break-all;">
-                        <code>57bd0515-7bd4-4f18-ade5-f59377981c9c</code><br>
-                        <button onclick="navigator.clipboard.writeText('57bd0515-7bd4-4f18-ade5-f59377981c9c').then(()=>alert('Copiado!'))" style="margin-top:5px; cursor:pointer;">COPIAR PIX</button>
-                    </div>
-                    <a href="https://wa.me/5596991168307?text=PIX: R$ ${valorTotal},00 (Números: ${numTexto})" 
-                       target="_blank" style="display:block; background:#25d366; color:white; padding:12px; border-radius:40px; text-decoration:none; font-weight:bold;">ENVIAR COMPROVANTE</a>
-                    <button onclick="location.reload()" style="background:none; border:none; color:#888; margin-top:15px; cursor:pointer;">Sair</button>
-                `;
-                
-                let t = 600, d = document.getElementById('timer');
-                const i = setInterval(() => {
-                    let m = parseInt(t/60,10), s = parseInt(t%60,10);
-                    d.textContent = (m<10?"0"+m:m)+":"+(s<10?"0"+s:s);
-                    if(--t < 0){ clearInterval(i); location.reload(); }
-                }, 1000);
             });
         }
 
