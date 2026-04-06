@@ -3,221 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rifa Digital</title>
+    <title>Rifa Digital - Silva Gráfica</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        /* --- CSS PRINCIPAL --- */
         body { 
-            margin: 0; 
-            padding: 0 0 140px 0; /* Espaço para o rodapé fixo */
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            text-align: center; 
-            color: white; 
-
-            /* NOVO DEGRADÊ DE FUNDO (Ciano para Roxo) */
+            margin: 0; padding: 0 0 140px 0; 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            text-align: center; color: white; 
             background: linear-gradient(180deg, #1abc9c 0%, #0077c2 45%, #8e44ad 100%) no-repeat center center fixed;
-            background-size: cover; /* Garante que preencha toda a tela */
+            background-size: cover;
         }
-
-        /* CONTAINER DO BANNER TOPO */
-        .banner-topo {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto 10px auto;
-            overflow: hidden;
-        }
-
-        .banner-topo img {
-            width: 100%;
-            height: auto;
-            display: block;
-            border-bottom: 2px solid #0d0d0d;
-        }
+        .banner-topo { width: 100%; max-width: 600px; margin: 0 auto 10px auto; overflow: hidden; }
+        .banner-topo img { width: 100%; height: auto; display: block; border-bottom: 2px solid #0d0d0d; }
         
-        /* TÍTULO PRINCIPAL (H2) */
-        h2 { 
-            color: #ffffff; 
-            text-transform: uppercase; 
-            letter-spacing: 2px; 
-            margin: 20px 0 5px 0; 
-            font-size: 2.5rem; 
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Sombra leve para leitura no degradê */
-        }
+        h2 { text-transform: uppercase; letter-spacing: 2px; margin: 20px 0 5px 0; font-size: 2.5rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .subtitulo { color: #fffb00; font-size: 16px; font-weight: bold; text-transform: uppercase; margin-bottom: 30px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
 
-        /* SUBTÍTULO DO SORTEIO */
-        .subtitulo {
-            color: #fffb00; /* Verde para destacar a data */
-            font-size: 16px;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 30px;
-            letter-spacing: 1px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-        }
-
-        /* GRADE DE NÚMEROS (CONTAINER SEMI-TRANSPARENTE) */
-        .rifa-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-            gap: 10px;
-            max-width: 600px;
-            margin: 0 auto;
-            
-            /* Ajustado para semi-transparência, permitindo ver o degradê */
-            background: rgba(22, 22, 22, 0.9); 
-            
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px solid rgba(128, 128, 128, 0.3);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.4); /* Sombra mais profunda */
-        }
-
-        /* ESTILO DO BOTÃO DE NÚMERO */
-        .num-btn {
-            aspect-ratio: 1;
-            background-color: #28a745; /* VERDE LIVRE */
-            border: 1px solid #1e7e34;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.1rem;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* ESTADOS DOS BOTÕES DE NÚMERO (MULTIPLO AMARELO ATIVO) */
-        .num-btn.selecionado { 
-            background-color: #f1c40f !important; /* AMARELO SELECIONADO */
-            color: black !important; 
-            border: 2px solid #fff;
-            transform: scale(1.1);
-            z-index: 2;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-        }
-
+        .rifa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 10px; max-width: 600px; margin: 0 auto; background: rgba(22, 22, 22, 0.9); padding: 20px; border-radius: 15px; border: 1px solid rgba(128, 128, 128, 0.3); }
+        
+        .num-btn { aspect-ratio: 1; background-color: #28a745; border: 1px solid #1e7e34; color: white; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .num-btn.selecionado { background-color: #f1c40f !important; color: black !important; border: 2px solid #fff; transform: scale(1.1); }
         .num-btn.reservado { background-color: #f39c12 !important; color: black !important; cursor: not-allowed; border: none; }
         .num-btn.pago { background-color: #e74c3c !important; color: white !important; cursor: not-allowed; border: none; }
 
-        /* LEGENDA (3 CORES - SEM O AMARELO) */
-        .legenda { 
-            display: flex; 
-            justify-content: center; 
-            gap: 15px; 
-            margin: 30px auto; 
-            flex-wrap: wrap; 
-            max-width: 600px; 
-            background: rgba(26, 26, 26, 0.85); /* Semi-transparente */
-            padding: 10px 15px;
-            border-radius: 50px;
-            border: 1px solid rgba(128, 128, 128, 0.2);
-        }
-        .item-legenda { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: #eee; }
-        .box { width: 16px; height: 16px; border-radius: 4px; }
-        .verde { background: #28a745; }
-        .laranja { background: #f39c12; }
-        .vermelho { background: #e74c3c; }
+        .legenda { display: flex; justify-content: center; gap: 15px; margin: 30px auto; flex-wrap: wrap; max-width: 600px; background: rgba(26, 26, 26, 0.85); padding: 10px 15px; border-radius: 50px; }
+        .box { width: 16px; height: 16px; border-radius: 4px; display: inline-block; vertical-align: middle; margin-right: 5px; }
+        .verde { background: #28a745; } .laranja { background: #f39c12; } .vermelho { background: #e74c3c; }
 
-        /* RODAPÉ FIXO (ESTILO PÍLULA) */
-        #footerAction { 
-            position: fixed; 
-            bottom: 30px; 
-            left: 50%;
-            transform: translateX(-50%); 
-            width: 90%; 
-            max-width: 350px; 
-            background: rgba(26, 26, 26, 0.95); /* Mais opaco para leitura */
-            padding: 10px; 
-            border-radius: 50px; 
-            border: 1px solid #444;
-            display: none; /* Só aparece quando algo é selecionado */
-            z-index: 100;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-        }
+        #footerAction { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 350px; background: rgba(26, 26, 26, 0.95); padding: 10px; border-radius: 50px; display: none; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+        .btn-confirmar { width: 100%; padding: 15px; border: none; border-radius: 40px; font-weight: bold; cursor: pointer; background: #28a745; color: white; text-transform: uppercase; }
 
-        /* BOTÃO DE CONFIRMAÇÃO DO RODAPÉ */
-        .btn-confirmar { 
-            width: 100%;
-            padding: 15px; 
-            border: none; 
-            border-radius: 40px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            font-size: 1rem; 
-            background: #28a745; 
-            color: white;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 200; align-items: center; justify-content: center; }
+        .modal-content { background: #1a1a1a; padding: 25px; border-radius: 15px; width: 85%; max-width: 400px; border: 1px solid #333; max-height: 80vh; overflow-y: auto; }
+        
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
+        .countdown { font-size: 28px; color: #ff3e3e; font-weight: bold; margin: 10px 0; font-family: monospace; background: rgba(255, 0, 0, 0.1); padding: 5px 15px; border-radius: 5px; display: inline-block; }
 
-        /* MODAL DE RESUMO (FUNDO SEMI-TRANSPARENTE MAIS ESCURO) */
-        #modal { 
-            display: none; 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.95); /* Quase preto para foco total no modal */
-            z-index: 200; 
-            align-items: center; 
-            justify-content: center; 
-        }
-
-        /* CONTEÚDO DO MODAL */
-        .modal-content { 
-            background: #1a1a1a; 
-            padding: 25px; 
-            border-radius: 15px; 
-            width: 85%; 
-            max-width: 350px; 
-            border: 1px solid #333; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-        }
-
-        /* CAMPOS DE ENTRADA DO MODAL */
-        input { 
-            width: 100%; 
-            padding: 12px; 
-            margin: 10px 0; 
-            border-radius: 8px; 
-            border: 1px solid #333; 
-            background: #000; 
-            color: white; 
-            box-sizing: border-box; 
-        }
-
-        /* BOTÃO CANCELAR NO MODAL */
-        .btn-cancelar {
-            background: none;
-            border: none;
-            color: #999;
-            margin-top: 15px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: color 0.2s;
-        }
-        .btn-cancelar:hover { color: #fff; }
+        /* Estilo Tabela ADM */
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 15px; color: #ccc; }
+        .admin-table th { background: #28a745; color: white; padding: 8px; text-align: left; }
+        .admin-table td { padding: 8px; border-bottom: 1px solid #333; }
+        .btn-adm-acao { padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; color: white; margin: 2px; }
     </style>
 </head>
 <body>
 
-    <div class="banner-topo">
-        <img src="banner.jpg" alt="Banner Silva Gráfica">
-    </div>
-
+    <div class="banner-topo"><img src="banner.jpg" alt="Banner Silva Gráfica"></div>
     <h2>RIFA DIGITAL</h2>
     <div class="subtitulo">SORTEIO DIA 10 DE MAIO APÓS O CULTO</div>
     
     <div class="rifa-grid" id="grid"></div>
 
     <div class="legenda">
-        <div class="item-legenda"><div class="box verde"></div> Livre</div>
-        <div class="item-legenda"><div class="box laranja"></div> Reservado</div>
-        <div class="item-legenda"><div class="box vermelho"></div> Comprado</div>
+        <span><div class="box verde"></div> Livre</span>
+        <span><div class="box laranja"></div> Reservado</span>
+        <span><div class="box vermelho"></div> Comprado</span>
     </div>
 
     <div id="footerAction">
@@ -225,17 +70,34 @@
     </div>
 
     <div id="modal">
-        <div class="modal-content">
-            <h3 id="infoReserva">Confirmar Números</h3>
-            <input type="text" id="nome" placeholder="Seu Nome Completo">
-            <input type="tel" id="tel" placeholder="Seu WhatsApp">
-            <button class="btn-confirmar" onclick="salvarReserva()">PAGAR AGORA (PIX)</button>
-            <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+        <div class="modal-content" id="modalInterno">
+            <div id="userSection">
+                <h3 id="infoReserva">Confirmar Números</h3>
+                <p style="color: #f1c40f; font-size: 14px;">O pagamento é via PIX!</p>
+                <input type="text" id="nome" placeholder="Seu Nome Completo">
+                <input type="tel" id="tel" placeholder="Seu WhatsApp">
+                <button class="btn-confirmar" onclick="salvarReserva()">RESERVAR E VER PIX</button>
+            </div>
+            
+            <div id="adminSection" style="display:none;">
+                <h3 style="color:#1abc9c; margin-top:0;">PAINEL ADM</h3>
+                <button onclick="gerarPDF()" style="background:#e74c3c; color:white; border:none; padding:10px; border-radius:5px; width:100%; font-weight:bold; cursor:pointer;">📄 BAIXAR PDF LIMPO</button>
+                <table class="admin-table">
+                    <thead><tr><th>Nº</th><th>Nome</th><th>Status</th><th>Ações</th></tr></thead>
+                    <tbody id="corpoAdmin"></tbody>
+                </table>
+            </div>
+
+            <button onclick="fecharModal()" style="background:none; border:none; color:#999; margin-top:20px; cursor:pointer;">Fechar</button>
         </div>
     </div>
 
+    <div style="margin-top: 50px; padding-bottom: 50px;">
+        <button onclick="toggleAdmin()" style="background: none; border: 1px solid #444; color: #444; padding: 5px 15px; border-radius: 20px; font-size: 10px; cursor: pointer;">
+            ⚙️ PAINEL ADM
+    </div>
+
     <script>
-        // --- CONFIGURAÇÃO FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyC0Mr2S59WOECK487M0o-5qu14wMOEzxIA",
             authDomain: "rifadigital-1da5b.firebaseapp.com",
@@ -247,26 +109,33 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
         let selecionados = [];
 
-        // Gerar Grade de 200 números
-        const grid = document.getElementById('grid');
         for (let i = 1; i <= 200; i++) {
             const btn = document.createElement('button');
-            btn.id = `n${i}`;
-            btn.innerText = i;
-            btn.className = 'num-btn';
+            btn.id = `n${i}`; btn.innerText = i; btn.className = 'num-btn';
             btn.onclick = () => clicarNumero(i);
-            grid.appendChild(btn);
+            document.getElementById('grid').appendChild(btn);
         }
 
-        // Função de clique no número (múltiplos amarelos)
+        setInterval(() => {
+            const agora = Date.now();
+            db.ref('rifa').once('value', (snap) => {
+                const dados = snap.val() || {};
+                const updates = {};
+                let mudou = false;
+                Object.keys(dados).forEach(num => {
+                    if (dados[num].status === 'reservado' && (agora - dados[num].horario) > 600000) {
+                        updates[num] = null; mudou = true;
+                    }
+                });
+                if (mudou) db.ref('rifa').update(updates);
+            });
+        }, 60000);
+
         function clicarNumero(num) {
             const btn = document.getElementById(`n${num}`);
-            // Bloqueia clique se já estiver reservado ou pago no Firebase
             if (btn.classList.contains('reservado') || btn.classList.contains('pago')) return;
-
             if (selecionados.includes(num)) {
                 selecionados = selecionados.filter(n => n !== num);
                 btn.classList.remove('selecionado');
@@ -274,61 +143,103 @@
                 selecionados.push(num);
                 btn.classList.add('selecionado');
             }
-            
-            // Controle do rodapé fixo pílula
-            const footer = document.getElementById('footerAction');
-            const btnAcao = document.getElementById('btnAcao');
-            if (selecionados.length > 0) {
-                footer.style.display = 'block';
-                btnAcao.innerText = `RESERVAR ${selecionados.length} NÚMERO(S)`;
-            } else {
-                footer.style.display = 'none';
-            }
+            document.getElementById('footerAction').style.display = selecionados.length > 0 ? 'block' : 'none';
+            document.getElementById('btnAcao').innerText = `RESERVAR ${selecionados.length} NÚMERO(S)`;
         }
 
-        // Funções do Modal
         function abrirModal() {
+            document.getElementById('userSection').style.display = 'block';
+            document.getElementById('adminSection').style.display = 'none';
             document.getElementById('infoReserva').innerText = `Total: R$ ${selecionados.length * 5},00`;
             document.getElementById('modal').style.display = 'flex';
         }
 
         function fecharModal() { document.getElementById('modal').style.display = 'none'; }
 
-        // Função de salvamento (link dinâmico InfinitePay)
-        function salvarReserva() {
-            const nome = document.getElementById('nome').value;
-            const tel = document.getElementById('tel').value;
-            if (!nome || !tel) return alert("Por favor, preencha seu nome completo e WhatsApp.");
+        // NOVA FUNÇÃO COM SENHA
+        function toggleAdmin() {
+            const senhaDefinida = "7260"; // Altere sua senha aqui
+            const senhaDigitada = prompt("Digite a senha administrativa:");
+            
+            if (senhaDigitada === senhaDefinida) {
+                document.getElementById('userSection').style.display = 'none';
+                document.getElementById('adminSection').style.display = 'block';
+                document.getElementById('modal').style.display = 'flex';
+                carregarAdmin();
+            } else {
+                alert("Senha incorreta!");
+            }
+        }
 
-            const quantidade = selecionados.length;
-            const valorTotal = (quantidade * 5).toFixed(2).replace('.', ',');
-            const linkDinamico = `https://pay.infinitepay.io/silva_grafica/${valorTotal}`;
-
-            const updates = {};
-            const agora = Date.now();
-            selecionados.forEach(num => {
-                updates[num] = { nome, tel, status: 'reservado', horario: agora };
-            });
-
-            db.ref('rifa').update(updates).then(() => {
-                window.location.href = linkDinamico;
+        function carregarAdmin() {
+            db.ref('rifa').on('value', (snap) => {
+                const dados = snap.val() || {};
+                const corpo = document.getElementById('corpoAdmin');
+                corpo.innerHTML = "";
+                Object.keys(dados).sort((a,b)=>a-b).forEach(num => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${num}</td><td>${dados[num].nome.split(' ')[0]}</td>
+                        <td style="color:${dados[num].status==='pago'?'#2ecc71':'#f39c12'}">${dados[num].status==='pago'?'PAGO':'RES'}</td>
+                        <td><button class="btn-adm-acao" style="background:#28a745" onclick="db.ref('rifa/${num}').update({status:'pago'})">✔</button>
+                        <button class="btn-adm-acao" style="background:#555" onclick="if(confirm('Excluir?'))db.ref('rifa/${num}').remove()">🗑</button></td>`;
+                    corpo.appendChild(tr);
+                });
             });
         }
 
-        // Sincronização em tempo real com Firebase
+        function salvarReserva() {
+            const nome = document.getElementById('nome').value;
+            const tel = document.getElementById('tel').value;
+            if (!nome || !tel) return alert("Preencha tudo!");
+            const valorTotal = selecionados.length * 5;
+            const agora = Date.now();
+            const updates = {};
+            selecionados.forEach(n => updates[n] = { nome, tel, status: 'reservado', horario: agora });
+
+            db.ref('rifa').update(updates).then(() => {
+                document.getElementById('userSection').innerHTML = `
+                    <h3 style="color:#28a745;">RESERVA OK!</h3>
+                    <div class="countdown" id="timer">10:00</div>
+                    <div style="background:#000; padding:15px; border-radius:10px; margin:10px 0;">
+                        <span style="color:#fffb00; font-size:22px; font-weight:bold;">R$ ${valorTotal},00</span>
+                    </div>
+                    <div style="background:#222; padding:10px; border-radius:8px; margin-bottom:15px; word-break:break-all;">
+                        <code>57bd0515-7bd4-4f18-ade5-f59377981c9c</code><br>
+                        <button onclick="navigator.clipboard.writeText('57bd0515-7bd4-4f18-ade5-f59377981c9c').then(()=>alert('Copiado!'))" style="margin-top:5px; cursor:pointer;">COPIAR PIX</button>
+                    </div>
+                    <a href="https://wa.me/5596991168307?text=PIX: R$ ${valorTotal},00 (Números: ${selecionados.join(',')})" 
+                       target="_blank" style="display:block; background:#25d366; color:white; padding:12px; border-radius:40px; text-decoration:none; font-weight:bold;">ENVIAR COMPROVANTE</a>
+                    <button onclick="location.reload()" style="background:none; border:none; color:#888; margin-top:15px; cursor:pointer;">Sair</button>
+                `;
+                let t = 600, d = document.getElementById('timer');
+                const i = setInterval(() => {
+                    let m = parseInt(t/60,10), s = parseInt(t%60,10);
+                    d.textContent = (m<10?"0"+m:m)+":"+(s<10?"0"+s:s);
+                    if(--t < 0){ clearInterval(i); location.reload(); }
+                }, 1000);
+            });
+        }
+
+        function gerarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(18); doc.text("RIFA DIGITAL", 14, 20);
+            db.ref('rifa').once('value', (s) => {
+                const d = s.val() || {}, rows = [];
+                Object.keys(d).sort((a,b)=>a-b).forEach(n => rows.push([n, d[n].nome, d[n].tel, d[n].status.toUpperCase()]));
+                doc.autoTable({ head: [['Nº', 'Nome', 'WhatsApp', 'Status']], body: rows, startY: 30, theme: 'grid', headStyles: { fillColor: [40, 167, 69] } });
+                doc.save("vendas-silva-grafica.pdf");
+            });
+        }
+
         db.ref('rifa').on('value', (snap) => {
-            const dados = snap.val() || {};
+            const d = snap.val() || {};
             for (let i = 1; i <= 200; i++) {
-                const btn = document.getElementById(`n${i}`);
-                if (dados[i]) {
-                    btn.className = 'num-btn ' + dados[i].status;
-                    // Remove da seleção local se alguém reservou/pagou
-                    if (selecionados.includes(i)) {
-                        selecionados = selecionados.filter(n => n !== i);
-                    }
-                } else if (!selecionados.includes(i)) {
-                    btn.className = 'num-btn';
-                }
+                const b = document.getElementById('n' + i);
+                if (d[i]) {
+                    b.className = 'num-btn ' + d[i].status;
+                    if (selecionados.includes(i)) selecionados = selecionados.filter(n => n !== i);
+                } else if (!selecionados.includes(i)) b.className = 'num-btn';
             }
         });
     </script>
