@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rifa Digital</title>
+    <title>Rifa Digital - Silva Gráfica</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -42,7 +42,9 @@
         .modal-content { background: #1a1a1a; padding: 25px; border-radius: 15px; width: 85%; max-width: 400px; border: 1px solid #333; max-height: 80vh; overflow-y: auto; }
         
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
-        .countdown { font-size: 28px; color: #ff3e3e; font-weight: bold; margin: 10px 0; font-family: monospace; background: rgba(255, 0, 0, 0.1); padding: 5px 15px; border-radius: 5px; display: inline-block; }
+        
+        /* Estilo do Alerta de Expiração */
+        .alerta-expira { background: rgba(255, 62, 62, 0.15); border: 1px solid #ff3e3e; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
 
         .admin-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 15px; color: #ccc; }
         .admin-table th { background: #28a745; color: white; padding: 8px; text-align: left; }
@@ -72,6 +74,12 @@
         <div class="modal-content" id="modalInterno">
             <div id="userSection">
                 <h3 id="infoReserva">Confirmar Números</h3>
+                
+                <div class="alerta-expira">
+                    <p style="color: #ff3e3e; margin: 0; font-weight: bold; font-size: 14px;">⚠️ O PIX EXPIRA EM 10 MINUTOS</p>
+                    <p style="color: #ccc; margin: 5px 0 0 0; font-size: 12px;">Após este prazo, sua reserva será cancelada automaticamente.</p>
+                </div>
+
                 <p style="color: #f1c40f; font-size: 14px;">O pagamento é via PIX!</p>
                 <input type="text" id="nome" placeholder="Seu Nome Completo">
                 <input type="tel" id="tel" placeholder="Seu WhatsApp">
@@ -111,6 +119,23 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         let selecionados = [];
+
+        // 1. LIMPEZA AUTOMÁTICA DE RESERVAS (Roda em segundo plano)
+        setInterval(function() {
+            const agora = Date.now();
+            const DEZ_MINUTOS = 10 * 60 * 1000;
+            db.ref('rifa').once('value', (snap) => {
+                const dados = snap.val();
+                if (!dados) return;
+                Object.keys(dados).forEach(num => {
+                    if (dados[num].status === 'reservado' && dados[num].horario) {
+                        if (agora - dados[num].horario > DEZ_MINUTOS) {
+                            db.ref(`rifa/${num}`).remove();
+                        }
+                    }
+                });
+            });
+        }, 30000);
 
         for (let i = 1; i <= 200; i++) {
             const btn = document.createElement('button');
@@ -155,7 +180,7 @@
             }
         }
 
-async function salvarReserva() {
+        async function salvarReserva() {
             const nome = document.getElementById('nome').value;
             const tel = document.getElementById('tel').value;
             const cpfCnpj = document.getElementById('cpfCnpj').value;
@@ -167,14 +192,13 @@ async function salvarReserva() {
             btnFinal.innerText = "GERANDO PIX...";
 
             try {
-                // CHAMADA PARA SUA API NA VERCEL (A PONTE SEGURA)
                 const resposta = await fetch('https://rifadigital-rose.vercel.app/api/finalizar-compra', { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         nome: nome,
                         telefone: tel,
-                        cpf: cpfCnpj, // A API vai tratar o CPF com segurança
+                        cpf: cpfCnpj,
                         valor: selecionados.length * 5,
                         numeros: selecionados.sort((a,b) => a - b)
                     })
@@ -183,7 +207,6 @@ async function salvarReserva() {
                 const dados = await resposta.json();
 
                 if (dados.url) {
-                    // 1. Salvar no Firebase localmente para garantir o registro
                     const updates = {};
                     const agora = Date.now();
                     selecionados.forEach(n => {
@@ -191,15 +214,14 @@ async function salvarReserva() {
                     });
                     await db.ref('rifa').update(updates);
 
-                    // 2. Redirecionar para o pagamento do Asaas
+                    alert("Reserva realizada! Você tem 10 minutos para pagar ou os números serão liberados.");
                     window.location.href = dados.url;
                 } else {
                     throw new Error(dados.erro || "Erro ao gerar cobrança");
                 }
 
             } catch (err) {
-                console.error(err);
-                alert("Erro ao processar: " + err.message);
+                alert("Erro: " + err.message);
                 btnFinal.disabled = false;
                 btnFinal.innerText = "COMPRAR E PAGAR";
             }
@@ -240,7 +262,9 @@ async function salvarReserva() {
                 if (d[i]) {
                     b.className = 'num-btn ' + d[i].status;
                     if (selecionados.includes(i)) selecionados = selecionados.filter(n => n !== i);
-                } else if (!selecionados.includes(i)) b.className = 'num-btn';
+                } else {
+                    if (!selecionados.includes(i)) b.className = 'num-btn';
+                }
             }
         });
     </script>
