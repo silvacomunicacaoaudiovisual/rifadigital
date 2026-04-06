@@ -42,8 +42,6 @@
         .modal-content { background: #1a1a1a; padding: 25px; border-radius: 15px; width: 85%; max-width: 400px; border: 1px solid #333; max-height: 80vh; overflow-y: auto; }
         
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
-        
-        /* Estilo do Alerta de Expiração */
         .alerta-expira { background: rgba(255, 62, 62, 0.15); border: 1px solid #ff3e3e; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
 
         .admin-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 15px; color: #ccc; }
@@ -83,7 +81,6 @@
                 <p style="color: #f1c40f; font-size: 14px;">O pagamento é via PIX!</p>
                 <input type="text" id="nome" placeholder="Seu Nome Completo">
                 <input type="tel" id="tel" placeholder="Seu WhatsApp">
-                <input type="text" id="cpfCnpj" placeholder="CPF (Apenas números)">
                 <button class="btn-confirmar" id="btnFinal" onclick="salvarReserva()">COMPRAR E PAGAR</button>
             </div>
             
@@ -120,7 +117,7 @@
         const db = firebase.database();
         let selecionados = [];
 
-        // 1. LIMPEZA AUTOMÁTICA DE RESERVAS (Roda em segundo plano)
+        // LIMPEZA AUTOMÁTICA DE RESERVAS (Roda a cada 30 segundos)
         setInterval(function() {
             const agora = Date.now();
             const DEZ_MINUTOS = 10 * 60 * 1000;
@@ -183,10 +180,10 @@
         async function salvarReserva() {
             const nome = document.getElementById('nome').value;
             const tel = document.getElementById('tel').value;
-            const cpfCnpj = document.getElementById('cpfCnpj').value;
             const btnFinal = document.getElementById('btnFinal');
 
-            if (!nome || !tel || !cpfCnpj) return alert("Preencha todos os campos!");
+            // VERIFICAÇÃO APENAS DE NOME E TELEFONE AGORA
+            if (!nome || !tel) return alert("Preencha nome e WhatsApp!");
 
             btnFinal.disabled = true;
             btnFinal.innerText = "GERANDO PIX...";
@@ -198,7 +195,6 @@
                     body: JSON.stringify({
                         nome: nome,
                         telefone: tel,
-                        cpf: cpfCnpj,
                         valor: selecionados.length * 5,
                         numeros: selecionados.sort((a,b) => a - b)
                     })
@@ -214,7 +210,7 @@
                     });
                     await db.ref('rifa').update(updates);
 
-                    alert("Reserva realizada! Você tem 10 minutos para pagar ou os números serão liberados.");
+                    alert("Reserva realizada! Você tem 10 minutos para pagar.");
                     window.location.href = dados.url;
                 } else {
                     throw new Error(dados.erro || "Erro ao gerar cobrança");
