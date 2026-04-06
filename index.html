@@ -44,7 +44,6 @@
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
         .countdown { font-size: 28px; color: #ff3e3e; font-weight: bold; margin: 10px 0; font-family: monospace; background: rgba(255, 0, 0, 0.1); padding: 5px 15px; border-radius: 5px; display: inline-block; }
 
-        /* Estilo Tabela ADM */
         .admin-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 15px; color: #ccc; }
         .admin-table th { background: #28a745; color: white; padding: 8px; text-align: left; }
         .admin-table td { padding: 8px; border-bottom: 1px solid #333; }
@@ -95,6 +94,7 @@
     <div style="margin-top: 50px; padding-bottom: 50px;">
         <button onclick="toggleAdmin()" style="background: none; border: 1px solid #444; color: #444; padding: 5px 15px; border-radius: 20px; font-size: 10px; cursor: pointer;">
             ⚙️ PAINEL ADM
+        </button>
     </div>
 
     <script>
@@ -111,6 +111,7 @@
         const db = firebase.database();
         let selecionados = [];
 
+        // Gerar Grade
         for (let i = 1; i <= 200; i++) {
             const btn = document.createElement('button');
             btn.id = `n${i}`; btn.innerText = i; btn.className = 'num-btn';
@@ -118,6 +119,7 @@
             document.getElementById('grid').appendChild(btn);
         }
 
+        // Limpeza de expirados
         setInterval(() => {
             const agora = Date.now();
             db.ref('rifa').once('value', (snap) => {
@@ -156,17 +158,15 @@
 
         function fecharModal() { document.getElementById('modal').style.display = 'none'; }
 
-        // NOVA FUNÇÃO COM SENHA
         function toggleAdmin() {
-            const senhaDefinida = "7260"; // Altere sua senha aqui
+            const senhaDefinida = "7260";
             const senhaDigitada = prompt("Digite a senha administrativa:");
-            
             if (senhaDigitada === senhaDefinida) {
                 document.getElementById('userSection').style.display = 'none';
                 document.getElementById('adminSection').style.display = 'block';
                 document.getElementById('modal').style.display = 'flex';
                 carregarAdmin();
-            } else {
+            } else if (senhaDigitada !== null) {
                 alert("Senha incorreta!");
             }
         }
@@ -191,9 +191,13 @@
             const nome = document.getElementById('nome').value;
             const tel = document.getElementById('tel').value;
             if (!nome || !tel) return alert("Preencha tudo!");
+
+            // CORREÇÃO AQUI: Salva os números em texto ANTES de processar
+            const numTexto = selecionados.sort((a,b) => a - b).join(', ');
             const valorTotal = selecionados.length * 5;
             const agora = Date.now();
             const updates = {};
+            
             selecionados.forEach(n => updates[n] = { nome, tel, status: 'reservado', horario: agora });
 
             db.ref('rifa').update(updates).then(() => {
@@ -207,10 +211,11 @@
                         <code>57bd0515-7bd4-4f18-ade5-f59377981c9c</code><br>
                         <button onclick="navigator.clipboard.writeText('57bd0515-7bd4-4f18-ade5-f59377981c9c').then(()=>alert('Copiado!'))" style="margin-top:5px; cursor:pointer;">COPIAR PIX</button>
                     </div>
-                    <a href="https://wa.me/5596991168307?text=PIX: R$ ${valorTotal},00 (Números: ${selecionados.join(',')})" 
+                    <a href="https://wa.me/5596991168307?text=PIX: R$ ${valorTotal},00 (Números: ${numTexto})" 
                        target="_blank" style="display:block; background:#25d366; color:white; padding:12px; border-radius:40px; text-decoration:none; font-weight:bold;">ENVIAR COMPROVANTE</a>
                     <button onclick="location.reload()" style="background:none; border:none; color:#888; margin-top:15px; cursor:pointer;">Sair</button>
                 `;
+                
                 let t = 600, d = document.getElementById('timer');
                 const i = setInterval(() => {
                     let m = parseInt(t/60,10), s = parseInt(t%60,10);
