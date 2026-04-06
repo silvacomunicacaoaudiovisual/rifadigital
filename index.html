@@ -146,7 +146,7 @@
                 btn.classList.add('selecionado');
             }
             document.getElementById('footerAction').style.display = selecionados.length > 0 ? 'block' : 'none';
-            document.getElementById('btnAcao').innerText = `RESERVAR ${selecionados.length} NÚMERO(S)`;
+            document.getElementById('btnAcao').innerText = `COMPRAR ${selecionados.length} NÚMERO(S)`;
         }
 
         function abrirModal() {
@@ -202,7 +202,7 @@
 
             db.ref('rifa').update(updates).then(() => {
                 document.getElementById('userSection').innerHTML = `
-                    <h3 style="color:#28a745;">RESERVA OK!</h3>
+                    <h3 style="color:#28a745;">COMPRAR OK!</h3>
                     <div class="countdown" id="timer">10:00</div>
                     <div style="background:#000; padding:15px; border-radius:10px; margin:10px 0;">
                         <span style="color:#fffb00; font-size:22px; font-weight:bold;">R$ ${valorTotal},00</span>
