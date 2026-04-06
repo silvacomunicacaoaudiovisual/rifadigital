@@ -12,52 +12,195 @@
         /* --- CSS PRINCIPAL --- */
         body { 
             margin: 0; 
-            padding: 0 0 140px 0; 
+            padding: 0 0 140px 0; /* Espaço para o rodapé fixo */
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             text-align: center; 
             color: white; 
+
+            /* NOVO DEGRADÊ DE FUNDO (Ciano para Roxo) */
             background: linear-gradient(180deg, #1abc9c 0%, #0077c2 45%, #8e44ad 100%) no-repeat center center fixed;
-            background-size: cover;
+            background-size: cover; /* Garante que preencha toda a tela */
         }
 
-        .banner-topo { width: 100%; max-width: 600px; margin: 0 auto 10px auto; overflow: hidden; }
-        .banner-topo img { width: 100%; height: auto; display: block; border-bottom: 2px solid #0d0d0d; }
+        /* CONTAINER DO BANNER TOPO */
+        .banner-topo {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 10px auto;
+            overflow: hidden;
+        }
+
+        .banner-topo img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-bottom: 2px solid #0d0d0d;
+        }
         
-        h2 { color: #ffffff; text-transform: uppercase; letter-spacing: 2px; margin: 20px 0 5px 0; font-size: 2.5rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        /* TÍTULO PRINCIPAL (H2) */
+        h2 { 
+            color: #ffffff; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            margin: 20px 0 5px 0; 
+            font-size: 2.5rem; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Sombra leve para leitura no degradê */
+        }
 
-        .subtitulo { color: #fffb00; font-size: 16px; font-weight: bold; text-transform: uppercase; margin-bottom: 30px; letter-spacing: 1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        /* SUBTÍTULO DO SORTEIO */
+        .subtitulo {
+            color: #fffb00; /* Verde para destacar a data */
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
 
-        .rifa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 10px; max-width: 600px; margin: 0 auto; background: rgba(22, 22, 22, 0.9); padding: 20px; border-radius: 15px; border: 1px solid rgba(128, 128, 128, 0.3); box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
+        /* GRADE DE NÚMEROS (CONTAINER SEMI-TRANSPARENTE) */
+        .rifa-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+            
+            /* Ajustado para semi-transparência, permitindo ver o degradê */
+            background: rgba(22, 22, 22, 0.9); 
+            
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(128, 128, 128, 0.3);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4); /* Sombra mais profunda */
+        }
 
-        .num-btn { aspect-ratio: 1; background-color: #28a745; border: 1px solid #1e7e34; color: white; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; }
+        /* ESTILO DO BOTÃO DE NÚMERO */
+        .num-btn {
+            aspect-ratio: 1;
+            background-color: #28a745; /* VERDE LIVRE */
+            border: 1px solid #1e7e34;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        .num-btn.selecionado { background-color: #f1c40f !important; color: black !important; border: 2px solid #fff; transform: scale(1.1); z-index: 2; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+        /* ESTADOS DOS BOTÕES DE NÚMERO (MULTIPLO AMARELO ATIVO) */
+        .num-btn.selecionado { 
+            background-color: #f1c40f !important; /* AMARELO SELECIONADO */
+            color: black !important; 
+            border: 2px solid #fff;
+            transform: scale(1.1);
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
         .num-btn.reservado { background-color: #f39c12 !important; color: black !important; cursor: not-allowed; border: none; }
         .num-btn.pago { background-color: #e74c3c !important; color: white !important; cursor: not-allowed; border: none; }
 
-        .legenda { display: flex; justify-content: center; gap: 15px; margin: 30px auto; flex-wrap: wrap; max-width: 600px; background: rgba(26, 26, 26, 0.85); padding: 10px 15px; border-radius: 50px; border: 1px solid rgba(128, 128, 128, 0.2); }
+        /* LEGENDA (3 CORES - SEM O AMARELO) */
+        .legenda { 
+            display: flex; 
+            justify-content: center; 
+            gap: 15px; 
+            margin: 30px auto; 
+            flex-wrap: wrap; 
+            max-width: 600px; 
+            background: rgba(26, 26, 26, 0.85); /* Semi-transparente */
+            padding: 10px 15px;
+            border-radius: 50px;
+            border: 1px solid rgba(128, 128, 128, 0.2);
+        }
         .item-legenda { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: #eee; }
         .box { width: 16px; height: 16px; border-radius: 4px; }
         .verde { background: #28a745; }
         .laranja { background: #f39c12; }
         .vermelho { background: #e74c3c; }
 
-        #footerAction { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 350px; background: rgba(26, 26, 26, 0.95); padding: 10px; border-radius: 50px; border: 1px solid #444; display: none; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+        /* RODAPÉ FIXO (ESTILO PÍLULA) */
+        #footerAction { 
+            position: fixed; 
+            bottom: 30px; 
+            left: 50%;
+            transform: translateX(-50%); 
+            width: 90%; 
+            max-width: 350px; 
+            background: rgba(26, 26, 26, 0.95); /* Mais opaco para leitura */
+            padding: 10px; 
+            border-radius: 50px; 
+            border: 1px solid #444;
+            display: none; /* Só aparece quando algo é selecionado */
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
 
-        .btn-confirmar { width: 100%; padding: 15px; border: none; border-radius: 40px; font-weight: bold; cursor: pointer; font-size: 1rem; background: #28a745; color: white; text-transform: uppercase; letter-spacing: 1px; }
+        /* BOTÃO DE CONFIRMAÇÃO DO RODAPÉ */
+        .btn-confirmar { 
+            width: 100%;
+            padding: 15px; 
+            border: none; 
+            border-radius: 40px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            background: #28a745; 
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-        /* MODAL ESTILIZADO */
-        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 200; align-items: center; justify-content: center; }
-        .modal-content { background: #1a1a1a; padding: 25px; border-radius: 15px; width: 85%; max-width: 350px; border: 1px solid #333; }
-        
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
+        /* MODAL DE RESUMO (FUNDO SEMI-TRANSPARENTE MAIS ESCURO) */
+        #modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); /* Quase preto para foco total no modal */
+            z-index: 200; 
+            align-items: center; 
+            justify-content: center; 
+        }
 
-        /* ÁREA DO PIX COPIA E COLA */
-        .pix-area { display: none; background: #222; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px dashed #f1c40f; }
-        .pix-code { font-size: 0.7rem; word-break: break-all; color: #f1c40f; margin-bottom: 10px; display: block; }
-        .btn-copy { background: #f1c40f; color: #000; border: none; padding: 8px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px; }
-        
-        .btn-cancelar { background: none; border: none; color: #999; margin-top: 15px; cursor: pointer; font-size: 0.9rem; }
+        /* CONTEÚDO DO MODAL */
+        .modal-content { 
+            background: #1a1a1a; 
+            padding: 25px; 
+            border-radius: 15px; 
+            width: 85%; 
+            max-width: 350px; 
+            border: 1px solid #333; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+
+        /* CAMPOS DE ENTRADA DO MODAL */
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+            border: 1px solid #333; 
+            background: #000; 
+            color: white; 
+            box-sizing: border-box; 
+        }
+
+        /* BOTÃO CANCELAR NO MODAL */
+        .btn-cancelar {
+            background: none;
+            border: none;
+            color: #999;
+            margin-top: 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .btn-cancelar:hover { color: #fff; }
     </style>
 </head>
 <body>
@@ -84,25 +227,15 @@
     <div id="modal">
         <div class="modal-content">
             <h3 id="infoReserva">Confirmar Números</h3>
-            <div id="formDados">
-                <input type="text" id="nome" placeholder="Seu Nome Completo">
-                <input type="tel" id="tel" placeholder="Seu WhatsApp">
-                <button class="btn-confirmar" onclick="salvarReserva()">AVANÇAR PARA PAGAMENTO</button>
-            </div>
-
-            <div id="pixArea" class="pix-area">
-                <p style="font-size: 0.8rem; color: #fff;">Pagamento via PIX Copia e Cola:</p>
-                <span class="pix-code" id="pixKey">SUA_CHAVE_PIX_AQUI</span>
-                <button class="btn-copy" onclick="copyPix()">COPIAR CÓDIGO PIX</button>
-                <p style="font-size: 0.7rem;">Após pagar, envie o comprovante no WhatsApp!</p>
-                <button class="btn-confirmar" style="background: #0077c2;" onclick="irParaInfinite()">TENTAR PELO CARTÃO</button>
-            </div>
-
+            <input type="text" id="nome" placeholder="Seu Nome Completo">
+            <input type="tel" id="tel" placeholder="Seu WhatsApp">
+            <button class="btn-confirmar" onclick="salvarReserva()">PAGAR AGORA (PIX)</button>
             <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
         </div>
     </div>
 
     <script>
+        // --- CONFIGURAÇÃO FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyC0Mr2S59WOECK487M0o-5qu14wMOEzxIA",
             authDomain: "rifadigital-1da5b.firebaseapp.com",
@@ -116,8 +249,8 @@
         const db = firebase.database();
 
         let selecionados = [];
-        let globalLink = "";
 
+        // Gerar Grade de 200 números
         const grid = document.getElementById('grid');
         for (let i = 1; i <= 200; i++) {
             const btn = document.createElement('button');
@@ -128,9 +261,12 @@
             grid.appendChild(btn);
         }
 
+        // Função de clique no número (múltiplos amarelos)
         function clicarNumero(num) {
             const btn = document.getElementById(`n${num}`);
+            // Bloqueia clique se já estiver reservado ou pago no Firebase
             if (btn.classList.contains('reservado') || btn.classList.contains('pago')) return;
+
             if (selecionados.includes(num)) {
                 selecionados = selecionados.filter(n => n !== num);
                 btn.classList.remove('selecionado');
@@ -138,27 +274,35 @@
                 selecionados.push(num);
                 btn.classList.add('selecionado');
             }
+            
+            // Controle do rodapé fixo pílula
             const footer = document.getElementById('footerAction');
-            document.getElementById('btnAcao').innerText = `RESERVAR ${selecionados.length} NÚMERO(S)`;
-            footer.style.display = selecionados.length > 0 ? 'block' : 'none';
+            const btnAcao = document.getElementById('btnAcao');
+            if (selecionados.length > 0) {
+                footer.style.display = 'block';
+                btnAcao.innerText = `RESERVAR ${selecionados.length} NÚMERO(S)`;
+            } else {
+                footer.style.display = 'none';
+            }
         }
 
+        // Funções do Modal
         function abrirModal() {
             document.getElementById('infoReserva').innerText = `Total: R$ ${selecionados.length * 5},00`;
-            document.getElementById('formDados').style.display = 'block';
-            document.getElementById('pixArea').style.display = 'none';
             document.getElementById('modal').style.display = 'flex';
         }
 
         function fecharModal() { document.getElementById('modal').style.display = 'none'; }
 
+        // Função de salvamento (link dinâmico InfinitePay)
         function salvarReserva() {
             const nome = document.getElementById('nome').value;
             const tel = document.getElementById('tel').value;
-            if (!nome || !tel) return alert("Preencha seus dados!");
+            if (!nome || !tel) return alert("Por favor, preencha seu nome completo e WhatsApp.");
 
-            const valorTotal = (selecionados.length * 5).toFixed(2).replace('.', ',');
-            globalLink = `https://pay.infinitepay.io/silva_grafica/${valorTotal}`;
+            const quantidade = selecionados.length;
+            const valorTotal = (quantidade * 5).toFixed(2).replace('.', ',');
+            const linkDinamico = `https://pay.infinitepay.io/silva_grafica/${valorTotal}`;
 
             const updates = {};
             const agora = Date.now();
@@ -167,28 +311,21 @@
             });
 
             db.ref('rifa').update(updates).then(() => {
-                // Em vez de sair da página, mostra as opções
-                document.getElementById('formDados').style.display = 'none';
-                document.getElementById('pixArea').style.display = 'block';
-                // Opcional: Redirecionar automaticamente após 3 segundos ou deixar o usuário escolher
-                setTimeout(() => { window.location.href = globalLink; }, 2000);
+                window.location.href = linkDinamico;
             });
         }
 
-        function irParaInfinite() { window.location.href = globalLink; }
-
-        function copyPix() {
-            const code = document.getElementById('pixKey').innerText;
-            navigator.clipboard.writeText(code).then(() => alert("Código PIX copiado!"));
-        }
-
+        // Sincronização em tempo real com Firebase
         db.ref('rifa').on('value', (snap) => {
             const dados = snap.val() || {};
             for (let i = 1; i <= 200; i++) {
                 const btn = document.getElementById(`n${i}`);
                 if (dados[i]) {
                     btn.className = 'num-btn ' + dados[i].status;
-                    if (selecionados.includes(i)) selecionados = selecionados.filter(n => n !== i);
+                    // Remove da seleção local se alguém reservou/pagou
+                    if (selecionados.includes(i)) {
+                        selecionados = selecionados.filter(n => n !== i);
+                    }
                 } else if (!selecionados.includes(i)) {
                     btn.className = 'num-btn';
                 }
