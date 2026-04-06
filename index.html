@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rifa Digital</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <style>
+        /* --- CSS PRINCIPAL --- */
+        body { 
+            margin: 0; 
+            padding: 0 0 140px 0; /* Espaço para o rodapé fixo */
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            text-align: center; 
+            color: white; 
+
+            /* NOVO DEGRADÊ DE FUNDO (Ciano para Roxo) */
+            background: linear-gradient(180deg, #1abc9c 0%, #0077c2 45%, #8e44ad 100%) no-repeat center center fixed;
+            background-size: cover; /* Garante que preencha toda a tela */
+        }
+
+        /* CONTAINER DO BANNER TOPO */
+        .banner-topo {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 10px auto;
+            overflow: hidden;
+        }
+
+        .banner-topo img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-bottom: 2px solid #0d0d0d;
+        }
+        
+        /* TÍTULO PRINCIPAL (H2) */
+        h2 { 
+            color: #ffffff; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            margin: 20px 0 5px 0; 
+            font-size: 2.5rem; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Sombra leve para leitura no degradê */
+        }
+
+        /* SUBTÍTULO DO SORTEIO */
+        .subtitulo {
+            color: #fffb00; /* Verde para destacar a data */
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* GRADE DE NÚMEROS (CONTAINER SEMI-TRANSPARENTE) */
+        .rifa-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+            
+            /* Ajustado para semi-transparência, permitindo ver o degradê */
+            background: rgba(22, 22, 22, 0.9); 
+            
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(128, 128, 128, 0.3);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4); /* Sombra mais profunda */
+        }
+
+        /* ESTILO DO BOTÃO DE NÚMERO */
+        .num-btn {
+            aspect-ratio: 1;
+            background-color: #28a745; /* VERDE LIVRE */
+            border: 1px solid #1e7e34;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ESTADOS DOS BOTÕES DE NÚMERO (MULTIPLO AMARELO ATIVO) */
+        .num-btn.selecionado { 
+            background-color: #f1c40f !important; /* AMARELO SELECIONADO */
+            color: black !important; 
+            border: 2px solid #fff;
+            transform: scale(1.1);
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        .num-btn.reservado { background-color: #f39c12 !important; color: black !important; cursor: not-allowed; border: none; }
+        .num-btn.pago { background-color: #e74c3c !important; color: white !important; cursor: not-allowed; border: none; }
+
+        /* LEGENDA (3 CORES - SEM O AMARELO) */
+        .legenda { 
+            display: flex; 
+            justify-content: center; 
+            gap: 15px; 
+            margin: 30px auto; 
+            flex-wrap: wrap; 
+            max-width: 600px; 
+            background: rgba(26, 26, 26, 0.85); /* Semi-transparente */
+            padding: 10px 15px;
+            border-radius: 50px;
+            border: 1px solid rgba(128, 128, 128, 0.2);
+        }
+        .item-legenda { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: #eee; }
+        .box { width: 16px; height: 16px; border-radius: 4px; }
+        .verde { background: #28a745; }
+        .laranja { background: #f39c12; }
+        .vermelho { background: #e74c3c; }
+
+        /* RODAPÉ FIXO (ESTILO PÍLULA) */
+        #footerAction { 
+            position: fixed; 
+            bottom: 30px; 
+            left: 50%;
+            transform: translateX(-50%); 
+            width: 90%; 
+            max-width: 350px; 
+            background: rgba(26, 26, 26, 0.95); /* Mais opaco para leitura */
+            padding: 10px; 
+            border-radius: 50px; 
+            border: 1px solid #444;
+            display: none; /* Só aparece quando algo é selecionado */
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+
+        /* BOTÃO DE CONFIRMAÇÃO DO RODAPÉ */
+        .btn-confirmar { 
+            width: 100%;
+            padding: 15px; 
+            border: none; 
+            border-radius: 40px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            background: #28a745; 
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* MODAL DE RESUMO (FUNDO SEMI-TRANSPARENTE MAIS ESCURO) */
+        #modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); /* Quase preto para foco total no modal */
+            z-index: 200; 
+            align-items: center; 
+            justify-content: center; 
+        }
+
+        /* CONTEÚDO DO MODAL */
+        .modal-content { 
+            background: #1a1a1a; 
+            padding: 25px; 
+            border-radius: 15px; 
+            width: 85%; 
+            max-width: 350px; 
+            border: 1px solid #333; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+
+        /* CAMPOS DE ENTRADA DO MODAL */
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+            border: 1px solid #333; 
+            background: #000; 
+            color: white; 
+            box-sizing: border-box; 
+        }
+
+        /* BOTÃO CANCELAR NO MODAL */
+        .btn-cancelar {
+            background: none;
+            border: none;
+            color: #999;
+            margin-top: 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .btn-cancelar:hover { color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="banner-topo">
+        <img src="banner.jpg" alt="Banner Silva Gráfica">
+    </div>
+
+    <h2>RIFA DIGITAL</h2>
+    <div class="subtitulo">SORTEIO DIA 10 DE MAIO APÓS O CULTO</div>
+    
+    <div class="rifa-grid" id="grid"></div>
+
+    <div class="legenda">
+        <div class="item-legenda"><div class="box verde"></div> Livre</div>
+        <div class="item-legenda"><div class="box laranja"></div> Reservado</div>
+        <div class="item-legenda"><div class="box vermelho"></div> Comprado</div>
+    </div>
+
+    <div id="footerAction">
+        <button class="btn-confirmar" id="btnAcao" onclick="abrirModal()">Finalizar Reserva</button>
+    </div>
+
+    <div id="modal">
+        <div class="modal-content">
+            <h3 id="infoReserva">Confirmar Números</h3>
+            <input type="text" id="nome" placeholder="Seu Nome Completo">
+            <input type="tel" id="tel" placeholder="Seu WhatsApp">
+            <button class="btn-confirmar" onclick="salvarReserva()">PAGAR AGORA (PIX)</button>
+            <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURAÇÃO FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0Mr2S59WOECK487M0o-5qu14wMOEzxIA",
+            authDomain: "rifadigital-1da5b.firebaseapp.com",
+            databaseURL: "https://rifadigital-1da5b-default-rtdb.firebaseio.com",
+            projectId: "rifadigital-1da5b",
+            storageBucket: "rifadigital-1da5b.firebasestorage.app",
+            messagingSenderId: "840507498009",
+            appId: "1:840507498009:web:ab61aca026294ad5d45488"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let selecionados = [];
+
+        // Gerar Grade de 200 números
+        const grid = document.getElementById('grid');
+        for (let i = 1; i <= 200; i++) {
+            const btn = document.createElement('button');
+            btn.id = `n${i}`;
+            btn.innerText = i;
+            btn.className = 'num-btn';
+            btn.onclick = () => clicarNumero(i);
+            grid.appendChild(btn);
+        }
+
+        // Função de clique no número (múltiplos amarelos)
+        function clicarNumero(num) {
+            const btn = document.getElementById(`n${num}`);
+            // Bloqueia clique se já estiver reservado ou pago no Firebase
+            if (btn.classList.contains('reservado') || btn.classList.contains('pago')) return;
+
+            if (selecionados.includes(num)) {
+                selecionados = selecionados.filter(n => n !== num);
+                btn.classList.remove('selecionado');
+            } else {
+                selecionados.push(num);
+                btn.classList.add('selecionado');
+            }
+            
+            // Controle do rodapé fixo pílula
+            const footer = document.getElementById('footerAction');
+            const btnAcao = document.getElementById('btnAcao');
+            if (selecionados.length > 0) {
+                footer.style.display = 'block';
+                btnAcao.innerText = `RESERVAR ${selecionados.length} NÚMERO(S)`;
+            } else {
+                footer.style.display = 'none';
+            }
+        }
+
+        // Funções do Modal
+        function abrirModal() {
+            document.getElementById('infoReserva').innerText = `Total: R$ ${selecionados.length * 5},00`;
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function fecharModal() { document.getElementById('modal').style.display = 'none'; }
+
+        // Função de salvamento (link dinâmico InfinitePay)
+        function salvarReserva() {
+            const nome = document.getElementById('nome').value;
+            const tel = document.getElementById('tel').value;
+            if (!nome || !tel) return alert("Por favor, preencha seu nome completo e WhatsApp.");
+
+            const quantidade = selecionados.length;
+            const valorTotal = (quantidade * 5).toFixed(2).replace('.', ',');
+            const linkDinamico = `https://pay.infinitepay.io/silva_grafica/${valorTotal}`;
+
+            const updates = {};
+            const agora = Date.now();
+            selecionados.forEach(num => {
+                updates[num] = { nome, tel, status: 'reservado', horario: agora };
+            });
+
+            db.ref('rifa').update(updates).then(() => {
+                window.location.href = linkDinamico;
+            });
+        }
+
+        // Sincronização em tempo real com Firebase
+        db.ref('rifa').on('value', (snap) => {
+            const dados = snap.val() || {};
+            for (let i = 1; i <= 200; i++) {
+                const btn = document.getElementById(`n${i}`);
+                if (dados[i]) {
+                    btn.className = 'num-btn ' + dados[i].status;
+                    // Remove da seleção local se alguém reservou/pagou
+                    if (selecionados.includes(i)) {
+                        selecionados = selecionados.filter(n => n !== i);
+                    }
+                } else if (!selecionados.includes(i)) {
+                    btn.className = 'num-btn';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
