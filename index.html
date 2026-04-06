@@ -155,7 +155,7 @@
             }
         }
 
-        async function salvarReserva() {
+async function salvarReserva() {
             const nome = document.getElementById('nome').value;
             const tel = document.getElementById('tel').value;
             const cpfCnpj = document.getElementById('cpfCnpj').value;
@@ -166,51 +166,42 @@
             btnFinal.disabled = true;
             btnFinal.innerText = "GERANDO PIX...";
 
-            const valorTotal = selecionados.length * 5;
-            const numTexto = selecionados.sort((a,b) => a - b).join(', ');
-            const token = '$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjNkZDEzODllLWUxMGItNGNkZi05ZTM3LTdmNmJhNjVhYWZiNTo6JGFhY2hfMDI4YmY4YjUtZmUwNC00OTI1LTgyMjUtOWQxN2FkNGY3OWEw';
-
             try {
-                // 1. Criar Cliente no Asaas
-                const resCliente = await fetch('https://www.asaas.com/api/v3/customers', {
+                // CHAMADA PARA SUA API NA VERCEL (A PONTE SEGURA)
+                const resposta = await fetch('https://rifadigital-rose.vercel.app/api/finalizar-compra', { 
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'access_token': token },
-                    body: JSON.stringify({ name: nome, cpfCnpj: cpfCnpj, mobilePhone: tel })
-                });
-                const dadosCliente = await resCliente.json();
-                
-                if (dadosCliente.errors) throw new Error(dadosCliente.errors[0].description);
-
-                // 2. Criar Cobrança
-                const resCobranca = await fetch('https://www.asaas.com/api/v3/payments', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'access_token': token },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        customer: dadosCliente.id,
-                        billingType: 'PIX',
-                        value: valorTotal,
-                        dueDate: new Date().toISOString().split('T')[0],
-                        description: `Rifa - Números: ${numTexto}`
+                        nome: nome,
+                        telefone: tel,
+                        cpf: cpfCnpj, // A API vai tratar o CPF com segurança
+                        valor: selecionados.length * 5,
+                        numeros: selecionados.sort((a,b) => a - b)
                     })
                 });
-                const dadosCobranca = await resCobranca.json();
 
-                if (dadosCobranca.invoiceUrl) {
-                    // 3. Salvar no Firebase
+                const dados = await resposta.json();
+
+                if (dados.url) {
+                    // 1. Salvar no Firebase localmente para garantir o registro
                     const updates = {};
                     const agora = Date.now();
-                    selecionados.forEach(n => updates[n] = { nome, tel, status: 'reservado', horario: agora, payId: dadosCobranca.id });
-                    
+                    selecionados.forEach(n => {
+                        updates[n] = { nome, tel, status: 'reservado', horario: agora };
+                    });
                     await db.ref('rifa').update(updates);
 
-                    // 4. Redirecionar para o Pagamento
-                    window.location.href = dadosCobranca.invoiceUrl;
+                    // 2. Redirecionar para o pagamento do Asaas
+                    window.location.href = dados.url;
+                } else {
+                    throw new Error(dados.erro || "Erro ao gerar cobrança");
                 }
 
             } catch (err) {
-                alert("Erro: " + err.message);
+                console.error(err);
+                alert("Erro ao processar: " + err.message);
                 btnFinal.disabled = false;
-                btnFinal.innerText = "COMPRAR";
+                btnFinal.innerText = "COMPRAR E PAGAR";
             }
         }
 
