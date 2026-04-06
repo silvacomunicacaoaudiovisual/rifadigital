@@ -35,6 +35,12 @@
         .box { width: 16px; height: 16px; border-radius: 4px; display: inline-block; vertical-align: middle; margin-right: 5px; }
         .verde { background: #28a745; } .laranja { background: #f39c12; } .vermelho { background: #e74c3c; }
 
+        /* Estilo da Seção de Consulta */
+        .secao-consulta { margin: 40px auto; max-width: 350px; background: rgba(26, 26, 26, 0.9); padding: 20px; border-radius: 15px; border: 1px dashed #1abc9c; }
+        .secao-consulta h4 { margin-top: 0; color: #1abc9c; text-transform: uppercase; font-size: 14px; }
+        .btn-consulta { background: #1abc9c; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-consulta:hover { background: #16a085; }
+
         #footerAction { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 350px; background: rgba(26, 26, 26, 0.95); padding: 10px; border-radius: 50px; display: none; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
         .btn-confirmar { width: 100%; padding: 15px; border: none; border-radius: 40px; font-weight: bold; cursor: pointer; background: #28a745; color: white; text-transform: uppercase; }
 
@@ -64,6 +70,12 @@
         <span><div class="box vermelho"></div> Comprado</span>
     </div>
 
+    <div class="secao-consulta">
+        <h4>Já comprou? Baixe seu cartão:</h4>
+        <input type="tel" id="consultaTel" placeholder="Seu WhatsApp (apenas números)">
+        <button class="btn-consulta" onclick="consultarEGerarCartao()">GERAR MEU CARTÃO 🎫</button>
+    </div>
+
     <div id="footerAction">
         <button class="btn-confirmar" id="btnAcao" onclick="abrirModal()">Finalizar Reserva</button>
     </div>
@@ -75,10 +87,10 @@
                 
                 <div class="alerta-expira">
                     <p style="color: #ff3e3e; margin: 0; font-weight: bold; font-size: 14px;">⚠️ O PIX EXPIRA EM 10 MINUTOS</p>
-                    <p style="color: #ccc; margin: 5px 0 0 0; font-size: 12px;">Após este prazo, sua reserva será cancelada automaticamente.</p>
+                    <p style="color: #ccc; margin: 5px 0 0 0; font-size: 12px;">Após este prazo, sua reserva será cancelada.</p>
                 </div>
 
-                <p style="color: #f1c40f; font-size: 14px;">O pagamento é via PIX!</p>
+                <p style="color: #f1c40f; font-size: 14px;">Pagamento via PIX</p>
                 <input type="text" id="nome" placeholder="Seu Nome Completo">
                 <input type="tel" id="tel" placeholder="Seu WhatsApp">
                 <button class="btn-confirmar" id="btnFinal" onclick="salvarReserva()">COMPRAR E PAGAR</button>
@@ -117,7 +129,7 @@
         const db = firebase.database();
         let selecionados = [];
 
-        // LIMPEZA AUTOMÁTICA DE RESERVAS (Roda a cada 30 segundos)
+        // LIMPEZA AUTOMÁTICA
         setInterval(function() {
             const agora = Date.now();
             const DEZ_MINUTOS = 10 * 60 * 1000;
@@ -164,17 +176,72 @@
 
         function fecharModal() { document.getElementById('modal').style.display = 'none'; }
 
-        function toggleAdmin() {
-            const senhaDefinida = "7260";
-            const senhaDigitada = prompt("Digite a senha administrativa:");
-            if (senhaDigitada === senhaDefinida) {
-                document.getElementById('userSection').style.display = 'none';
-                document.getElementById('adminSection').style.display = 'block';
-                document.getElementById('modal').style.display = 'flex';
-                carregarAdmin();
-            } else if (senhaDigitada !== null) {
-                alert("Senha incorreta!");
-            }
+        // GERAR CARTÃO PREMIUM
+        function gerarCartaoCliente(nome, numeros) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: [100, 150] });
+
+            doc.setFillColor(26, 26, 26);
+            doc.rect(0, 0, 100, 150, 'F');
+            doc.setDrawColor(26, 188, 156);
+            doc.setLineWidth(2);
+            doc.rect(5, 5, 90, 140);
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.text("RIFA DIGITAL", 50, 25, { align: "center" });
+            doc.setFontSize(10);
+            doc.setTextColor(255, 251, 0);
+            doc.text("SILVA GRÁFICA", 50, 32, { align: "center" });
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(12);
+            doc.text("BILHETE DE PARTICIPAÇÃO", 50, 50, { align: "center" });
+            
+            doc.setFontSize(10);
+            doc.text(`Cliente: ${nome}`, 15, 70);
+            doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 15, 80);
+            
+            doc.setFontSize(14);
+            doc.setTextColor(26, 188, 156);
+            doc.text("NÚMEROS ESCOLHIDOS:", 50, 100, { align: "center" });
+            
+            doc.setFontSize(18);
+            doc.setTextColor(255, 255, 255);
+            doc.text(numeros.join(", "), 50, 115, { align: "center", maxWidth: 70 });
+
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text("Sorteio: 10 de Maio após o culto", 50, 140, { align: "center" });
+
+            doc.save(`Rifa_Silva_${nome.replace(/\s/g, '_')}.pdf`);
+        }
+
+        // FUNÇÃO DE CONSULTA (OPÇÃO 1)
+        function consultarEGerarCartao() {
+            const telBusca = document.getElementById('consultaTel').value;
+            if(!telBusca) return alert("Digite seu WhatsApp!");
+
+            db.ref('rifa').once('value', (snap) => {
+                const dados = snap.val();
+                let nums = [];
+                let nomeClie = "";
+
+                if (dados) {
+                    Object.keys(dados).forEach(num => {
+                        if (dados[num].tel === telBusca) {
+                            nums.push(num);
+                            nomeClie = dados[num].nome;
+                        }
+                    });
+                }
+
+                if (nums.length > 0) {
+                    gerarCartaoCliente(nomeClie, nums.sort((a,b) => a-b));
+                } else {
+                    alert("Nenhum bilhete encontrado para este número.");
+                }
+            });
         }
 
         async function salvarReserva() {
@@ -182,7 +249,6 @@
             const tel = document.getElementById('tel').value;
             const btnFinal = document.getElementById('btnFinal');
 
-            // VERIFICAÇÃO APENAS DE NOME E TELEFONE AGORA
             if (!nome || !tel) return alert("Preencha nome e WhatsApp!");
 
             btnFinal.disabled = true;
@@ -210,16 +276,26 @@
                     });
                     await db.ref('rifa').update(updates);
 
-                    alert("Reserva realizada! Você tem 10 minutos para pagar.");
+                    alert("Reserva feita! Redirecionando para o Pix...");
                     window.location.href = dados.url;
                 } else {
                     throw new Error(dados.erro || "Erro ao gerar cobrança");
                 }
-
             } catch (err) {
                 alert("Erro: " + err.message);
                 btnFinal.disabled = false;
                 btnFinal.innerText = "COMPRAR E PAGAR";
+            }
+        }
+
+        function toggleAdmin() {
+            const senhaDefinida = "7260";
+            const senhaDigitada = prompt("Digite a senha:");
+            if (senhaDigitada === senhaDefinida) {
+                document.getElementById('userSection').style.display = 'none';
+                document.getElementById('adminSection').style.display = 'block';
+                document.getElementById('modal').style.display = 'flex';
+                carregarAdmin();
             }
         }
 
@@ -242,12 +318,12 @@
         function gerarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.setFontSize(18); doc.text("RIFA DIGITAL", 14, 20);
+            doc.text("RELATÓRIO DE VENDAS", 14, 20);
             db.ref('rifa').once('value', (s) => {
                 const d = s.val() || {}, rows = [];
                 Object.keys(d).sort((a,b)=>a-b).forEach(n => rows.push([n, d[n].nome, d[n].tel, d[n].status.toUpperCase()]));
-                doc.autoTable({ head: [['Nº', 'Nome', 'WhatsApp', 'Status']], body: rows, startY: 30, theme: 'grid', headStyles: { fillColor: [40, 167, 69] } });
-                doc.save("vendas-silva-grafica.pdf");
+                doc.autoTable({ head: [['Nº', 'Nome', 'WhatsApp', 'Status']], body: rows, startY: 30 });
+                doc.save("vendas.pdf");
             });
         }
 
