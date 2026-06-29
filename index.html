@@ -35,11 +35,22 @@
         .box { width: 16px; height: 16px; border-radius: 4px; display: inline-block; vertical-align: middle; margin-right: 5px; }
         .verde { background: #28a745; } .laranja { background: #f39c12; } .vermelho { background: #e74c3c; }
 
-        /* Estilo da Seção de Consulta */
-        .secao-consulta { margin: 40px auto; max-width: 350px; background: rgba(26, 26, 26, 0.9); padding: 20px; border-radius: 15px; border: 1px dashed #1abc9c; }
-        .secao-consulta h4 { margin-top: 0; color: #1abc9c; text-transform: uppercase; font-size: 14px; }
-        .btn-consulta { background: #1abc9c; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-consulta:hover { background: #16a085; }
+        /* ESTILO DA NOVA SEÇÃO DE CONSULTA */
+        .secao-consulta { 
+            margin: 20px auto; 
+            max-width: 400px; 
+            background: rgba(26, 26, 26, 0.95); 
+            padding: 20px; 
+            border-radius: 20px; 
+            border: 2px dashed #1abc9c;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .secao-consulta h4 { margin: 0 0 15px 0; color: #1abc9c; font-size: 14px; text-transform: uppercase; }
+        .btn-consulta { 
+            background: #1abc9c; color: white; border: none; 
+            padding: 12px; border-radius: 10px; width: 100%; 
+            font-weight: bold; cursor: pointer; text-transform: uppercase;
+        }
 
         #footerAction { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 350px; background: rgba(26, 26, 26, 0.95); padding: 10px; border-radius: 50px; display: none; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
         .btn-confirmar { width: 100%; padding: 15px; border: none; border-radius: 40px; font-weight: bold; cursor: pointer; background: #28a745; color: white; text-transform: uppercase; }
@@ -48,7 +59,7 @@
         .modal-content { background: #1a1a1a; padding: 25px; border-radius: 15px; width: 85%; max-width: 400px; border: 1px solid #333; max-height: 80vh; overflow-y: auto; }
         
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
-        .alerta-expira { background: rgba(255, 62, 62, 0.15); border: 1px solid #ff3e3e; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+        .countdown { font-size: 28px; color: #ff3e3e; font-weight: bold; margin: 10px 0; font-family: monospace; background: rgba(255, 0, 0, 0.1); padding: 5px 15px; border-radius: 5px; display: inline-block; }
 
         .admin-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 15px; color: #ccc; }
         .admin-table th { background: #28a745; color: white; padding: 8px; text-align: left; }
@@ -70,6 +81,7 @@
         <span><div class="box vermelho"></div> Comprado</span>
     </div>
 
+    <!-- SEÇÃO DE CONSULTA ADICIONADA -->
     <div class="secao-consulta">
         <h4>Já comprou? Baixe seu cartão:</h4>
         <input type="tel" id="consultaTel" placeholder="Seu WhatsApp (apenas números)">
@@ -84,16 +96,10 @@
         <div class="modal-content" id="modalInterno">
             <div id="userSection">
                 <h3 id="infoReserva">Confirmar Números</h3>
-                
-                <div class="alerta-expira">
-                    <p style="color: #ff3e3e; margin: 0; font-weight: bold; font-size: 14px;">⚠️ O PIX EXPIRA EM 10 MINUTOS</p>
-                    <p style="color: #ccc; margin: 5px 0 0 0; font-size: 12px;">Após este prazo, sua reserva será cancelada.</p>
-                </div>
-
-                <p style="color: #f1c40f; font-size: 14px;">Pagamento via PIX</p>
+                <p style="color: #f1c40f; font-size: 14px;">O pagamento é via PIX!</p>
                 <input type="text" id="nome" placeholder="Seu Nome Completo">
                 <input type="tel" id="tel" placeholder="Seu WhatsApp">
-                <button class="btn-confirmar" id="btnFinal" onclick="salvarReserva()">COMPRAR E PAGAR</button>
+                <button class="btn-confirmar" onclick="salvarReserva()">COMPRAR</button>
             </div>
             
             <div id="adminSection" style="display:none;">
@@ -129,29 +135,101 @@
         const db = firebase.database();
         let selecionados = [];
 
-        // LIMPEZA AUTOMÁTICA
-        setInterval(function() {
-            const agora = Date.now();
-            const DEZ_MINUTOS = 10 * 60 * 1000;
+        // FUNÇÃO PARA GERAR O CARTÃO INDIVIDUAL (PDF)
+        function gerarCartaoIndividual(nome, numeros) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: [100, 150] });
+
+            // Fundo escuro
+            doc.setFillColor(26, 26, 26);
+            doc.rect(0, 0, 100, 150, 'F');
+            
+            // Borda elegante
+            doc.setDrawColor(26, 188, 156);
+            doc.setLineWidth(2);
+            doc.rect(5, 5, 90, 140);
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.text("RIFA DIGITAL", 50, 25, { align: "center" });
+            
+            doc.setTextColor(255, 251, 0);
+            doc.setFontSize(10);
+           
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(12);
+            doc.text("COMPROVANTE DE BILHETES", 50, 50, { align: "center" });
+            
+            doc.setFontSize(10);
+            doc.text(`NOME: ${nome.toUpperCase()}`, 15, 70);
+            doc.text(`DATA: ${new Date().toLocaleDateString('pt-BR')}`, 15, 80);
+            
+            doc.setFontSize(14);
+            doc.setTextColor(26, 188, 156);
+            doc.text("SEUS NÚMEROS:", 50, 100, { align: "center" });
+            
+            doc.setFontSize(22);
+            doc.setTextColor(255, 255, 255);
+            doc.text(numeros.join(", "), 50, 115, { align: "center", maxWidth: 80 });
+
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text("Sorteio: 10 de Maio após o culto", 50, 140, { align: "center" });
+
+            doc.save(`Bilhete_Silva_${nome.replace(/\s/g, '_')}.pdf`);
+        }
+
+        // FUNÇÃO DE CONSULTA POR WHATSAPP
+        function consultarEGerarCartao() {
+            const telBusca = document.getElementById('consultaTel').value.trim();
+            if(!telBusca) return alert("Por favor, digite seu WhatsApp!");
+
             db.ref('rifa').once('value', (snap) => {
                 const dados = snap.val();
-                if (!dados) return;
-                Object.keys(dados).forEach(num => {
-                    if (dados[num].status === 'reservado' && dados[num].horario) {
-                        if (agora - dados[num].horario > DEZ_MINUTOS) {
-                            db.ref(`rifa/${num}`).remove();
-                        }
-                    }
-                });
-            });
-        }, 30000);
+                let numerosEncontrados = [];
+                let nomeCliente = "";
 
+                if (dados) {
+                    Object.keys(dados).forEach(num => {
+                        if (dados[num].tel === telBusca) {
+                            numerosEncontrados.push(num);
+                            nomeCliente = dados[num].nome;
+                        }
+                    });
+                }
+
+                if (numerosEncontrados.length > 0) {
+                    gerarCartaoIndividual(nomeCliente, numerosEncontrados.sort((a,b) => a-b));
+                } else {
+                    alert("Nenhuma reserva encontrada para este número. Verifique se digitou corretamente.");
+                }
+            });
+        }
+
+        // Gerar Grade
         for (let i = 1; i <= 200; i++) {
             const btn = document.createElement('button');
             btn.id = `n${i}`; btn.innerText = i; btn.className = 'num-btn';
             btn.onclick = () => clicarNumero(i);
             document.getElementById('grid').appendChild(btn);
         }
+
+        // Limpeza de expirados
+        setInterval(() => {
+            const agora = Date.now();
+            db.ref('rifa').once('value', (snap) => {
+                const dados = snap.val() || {};
+                const updates = {};
+                let mudou = false;
+                Object.keys(dados).forEach(num => {
+                    if (dados[num].status === 'reservado' && (agora - dados[num].horario) > 600000) {
+                        updates[num] = null; mudou = true;
+                    }
+                });
+                if (mudou) db.ref('rifa').update(updates);
+            });
+        }, 60000);
 
         function clicarNumero(num) {
             const btn = document.getElementById(`n${num}`);
@@ -176,126 +254,16 @@
 
         function fecharModal() { document.getElementById('modal').style.display = 'none'; }
 
-        // GERAR CARTÃO PREMIUM
-        function gerarCartaoCliente(nome, numeros) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: [100, 150] });
-
-            doc.setFillColor(26, 26, 26);
-            doc.rect(0, 0, 100, 150, 'F');
-            doc.setDrawColor(26, 188, 156);
-            doc.setLineWidth(2);
-            doc.rect(5, 5, 90, 140);
-
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(16);
-            doc.text("RIFA DIGITAL", 50, 25, { align: "center" });
-            doc.setFontSize(10);
-            doc.setTextColor(255, 251, 0);
-            doc.text("SILVA GRÁFICA", 50, 32, { align: "center" });
-
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(12);
-            doc.text("BILHETE DE PARTICIPAÇÃO", 50, 50, { align: "center" });
-            
-            doc.setFontSize(10);
-            doc.text(`Cliente: ${nome}`, 15, 70);
-            doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 15, 80);
-            
-            doc.setFontSize(14);
-            doc.setTextColor(26, 188, 156);
-            doc.text("NÚMEROS ESCOLHIDOS:", 50, 100, { align: "center" });
-            
-            doc.setFontSize(18);
-            doc.setTextColor(255, 255, 255);
-            doc.text(numeros.join(", "), 50, 115, { align: "center", maxWidth: 70 });
-
-            doc.setFontSize(8);
-            doc.setTextColor(150, 150, 150);
-            doc.text("Sorteio: 10 de Maio após o culto", 50, 140, { align: "center" });
-
-            doc.save(`Rifa_Silva_${nome.replace(/\s/g, '_')}.pdf`);
-        }
-
-        // FUNÇÃO DE CONSULTA (OPÇÃO 1)
-        function consultarEGerarCartao() {
-            const telBusca = document.getElementById('consultaTel').value;
-            if(!telBusca) return alert("Digite seu WhatsApp!");
-
-            db.ref('rifa').once('value', (snap) => {
-                const dados = snap.val();
-                let nums = [];
-                let nomeClie = "";
-
-                if (dados) {
-                    Object.keys(dados).forEach(num => {
-                        if (dados[num].tel === telBusca) {
-                            nums.push(num);
-                            nomeClie = dados[num].nome;
-                        }
-                    });
-                }
-
-                if (nums.length > 0) {
-                    gerarCartaoCliente(nomeClie, nums.sort((a,b) => a-b));
-                } else {
-                    alert("Nenhum bilhete encontrado para este número.");
-                }
-            });
-        }
-
-        async function salvarReserva() {
-            const nome = document.getElementById('nome').value;
-            const tel = document.getElementById('tel').value;
-            const btnFinal = document.getElementById('btnFinal');
-
-            if (!nome || !tel) return alert("Preencha nome e WhatsApp!");
-
-            btnFinal.disabled = true;
-            btnFinal.innerText = "GERANDO PIX...";
-
-            try {
-                const resposta = await fetch('https://rifadigital-rose.vercel.app/api/finalizar-compra', { 
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nome: nome,
-                        telefone: tel,
-                        valor: selecionados.length * 5,
-                        numeros: selecionados.sort((a,b) => a - b)
-                    })
-                });
-
-                const dados = await resposta.json();
-
-                if (dados.url) {
-                    const updates = {};
-                    const agora = Date.now();
-                    selecionados.forEach(n => {
-                        updates[n] = { nome, tel, status: 'reservado', horario: agora };
-                    });
-                    await db.ref('rifa').update(updates);
-
-                    alert("Reserva feita! Redirecionando para o Pix...");
-                    window.location.href = dados.url;
-                } else {
-                    throw new Error(dados.erro || "Erro ao gerar cobrança");
-                }
-            } catch (err) {
-                alert("Erro: " + err.message);
-                btnFinal.disabled = false;
-                btnFinal.innerText = "COMPRAR E PAGAR";
-            }
-        }
-
         function toggleAdmin() {
-            const senhaDefinida = "7260";
-            const senhaDigitada = prompt("Digite a senha:");
+            const senhaDefinida = "8307";
+            const senhaDigitada = prompt("Digite a senha administrativa:");
             if (senhaDigitada === senhaDefinida) {
                 document.getElementById('userSection').style.display = 'none';
                 document.getElementById('adminSection').style.display = 'block';
                 document.getElementById('modal').style.display = 'flex';
                 carregarAdmin();
+            } else if (senhaDigitada !== null) {
+                alert("Senha incorreta!");
             }
         }
 
@@ -315,15 +283,52 @@
             });
         }
 
+        function salvarReserva() {
+            const nome = document.getElementById('nome').value;
+            const tel = document.getElementById('tel').value;
+            if (!nome || !tel) return alert("Preencha tudo!");
+
+            const numTexto = selecionados.sort((a,b) => a - b).join(', ');
+            const valorTotal = selecionados.length * 5;
+            const agora = Date.now();
+            const updates = {};
+            
+            selecionados.forEach(n => updates[n] = { nome, tel, status: 'reservado', horario: agora });
+
+            db.ref('rifa').update(updates).then(() => {
+                document.getElementById('userSection').innerHTML = `
+                    <h3 style="color:#28a745;">PAGUE ANTES DO TEMPO!</h3>
+                    <div class="countdown" id="timer">10:00</div>
+                    <div style="background:#000; padding:15px; border-radius:10px; margin:10px 0;">
+                        <span style="color:#fffb00; font-size:22px; font-weight:bold;">R$ ${valorTotal},00</span>
+                    </div>
+                    <div style="background:#222; padding:10px; border-radius:8px; margin-bottom:15px; word-break:break-all;">
+                        <code>57bd0515-7bd4-4f18-ade5-f59377981c9c</code><br>
+                        <button onclick="navigator.clipboard.writeText('57bd0515-7bd4-4f18-ade5-f59377981c9c').then(()=>alert('Copiado!'))" style="margin-top:5px; cursor:pointer;">COPIAR PIX</button>
+                    </div>
+                    <a href="https://wa.me/5596984379282?text=PIX: R$ ${valorTotal},00 (Números: ${numTexto})" 
+                       target="_blank" style="display:block; background:#25d366; color:white; padding:12px; border-radius:40px; text-decoration:none; font-weight:bold;">ENVIAR COMPROVANTE</a>
+                    <button onclick="location.reload()" style="background:none; border:none; color:#888; margin-top:15px; cursor:pointer;">Sair</button>
+                `;
+                
+                let t = 600, d = document.getElementById('timer');
+                const i = setInterval(() => {
+                    let m = parseInt(t/60,10), s = parseInt(t%60,10);
+                    d.textContent = (m<10?"0"+m:m)+":"+(s<10?"0"+s:s);
+                    if(--t < 0){ clearInterval(i); location.reload(); }
+                }, 1000);
+            });
+        }
+
         function gerarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.text("RELATÓRIO DE VENDAS", 14, 20);
+            doc.setFontSize(18); doc.text("RIFA DIGITAL", 14, 20);
             db.ref('rifa').once('value', (s) => {
                 const d = s.val() || {}, rows = [];
                 Object.keys(d).sort((a,b)=>a-b).forEach(n => rows.push([n, d[n].nome, d[n].tel, d[n].status.toUpperCase()]));
-                doc.autoTable({ head: [['Nº', 'Nome', 'WhatsApp', 'Status']], body: rows, startY: 30 });
-                doc.save("vendas.pdf");
+                doc.autoTable({ head: [['Nº', 'Nome', 'WhatsApp', 'Status']], body: rows, startY: 30, theme: 'grid', headStyles: { fillColor: [40, 167, 69] } });
+                doc.save("vendas-silva-grafica.pdf");
             });
         }
 
@@ -334,9 +339,7 @@
                 if (d[i]) {
                     b.className = 'num-btn ' + d[i].status;
                     if (selecionados.includes(i)) selecionados = selecionados.filter(n => n !== i);
-                } else {
-                    if (!selecionados.includes(i)) b.className = 'num-btn';
-                }
+                } else if (!selecionados.includes(i)) b.className = 'num-btn';
             }
         });
     </script>
